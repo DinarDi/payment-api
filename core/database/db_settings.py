@@ -24,7 +24,7 @@ class DatabaseSettings:
         )
 
     async def create_async_session(self) -> AsyncGenerator[AsyncSession, None]:
-        async with self.async_session as session:
+        async with self.async_session() as session:
             yield session
 
 
