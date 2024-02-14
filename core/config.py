@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     """
 
     DB_URL: str
+    db_echo: bool = True
     model_config = SettingsConfigDict(env_file='.env', extra='allow')
 
 
