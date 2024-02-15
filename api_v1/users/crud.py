@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.database.models import User
+from core.database.models import User, Account
 from .schemas import UserCreate
 from ..auth.utils import hash_password
 
@@ -19,6 +19,13 @@ async def create_user(
         password=user_password,
     )
     session.add(user)
+    await session.flush()
+
+    # Create account for user
+    account = Account(user_id=user.id)
+    session.add(account)
+
     await session.commit()
     await session.refresh(user)
+
     return user
