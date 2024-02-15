@@ -12,8 +12,8 @@ class AuthJWT(BaseModel):
     """
     Settings for JWT
     """
-    private_key_path = BASE_DIR / 'certs' / 'jwt-private.pem'
-    public_key_path = BASE_DIR / 'certs' / 'jwt-public.pem'
+    private_key_path: Path = BASE_DIR / 'certs' / 'jwt-private.pem'
+    public_key_path: Path = BASE_DIR / 'certs' / 'jwt-public.pem'
     algorithm: str = 'RS256'
     access_token_exp: timedelta = timedelta(days=1)
 
