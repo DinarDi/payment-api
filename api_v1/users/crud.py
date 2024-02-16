@@ -1,7 +1,7 @@
 from sqlalchemy import select, Result
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.database.models import User, Account
+from core.database.models import User, Account, Token
 from .schemas import UserCreate
 from ..auth.utils import hash_password
 
@@ -25,6 +25,9 @@ async def create_user(
     # Create account for user
     account = Account(user_id=user.id)
     session.add(account)
+    # Create token for user
+    token = Token(user_id=user.id)
+    session.add(token)
 
     await session.commit()
     await session.refresh(user)
