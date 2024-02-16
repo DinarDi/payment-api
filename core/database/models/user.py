@@ -8,6 +8,7 @@ from .base import Base
 
 if TYPE_CHECKING:
     from .account import Account
+    from .token import Token
 
 
 class User(Base):
@@ -18,3 +19,4 @@ class User(Base):
     password: Mapped[bytes] = mapped_column(LargeBinary())
 
     account: Mapped['Account'] = relationship(back_populates='user')
+    token: Mapped['Token'] = relationship(back_populates='user')
