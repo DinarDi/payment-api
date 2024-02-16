@@ -15,6 +15,6 @@ class Token(Base):
         ForeignKey('user.id'),
         unique=True
     )
-    refresh_token: Mapped[str]
+    refresh_token: Mapped[str | None]
 
     user: Mapped['User'] = relationship(back_populates='token')
