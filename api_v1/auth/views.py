@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api_v1.users import crud
 from api_v1.users.schemas import UserCreate, UserRead, UserLogin
 from . import utils
-from .schemas import Token
+from .schemas import Token, TokenModeEnum
 from core.database.models import User
 from core.database import db_settings
 
@@ -48,14 +48,19 @@ async def login_user(
     ):
         raise error
 
-    # create token
+    # payload for token
     jwt_payload = {
         'sub': user.username,
         'email': user.email
     }
-    access_token = utils.encode_jwt(jwt_payload)
+    # create access token
+    access_token = utils.encode_jwt(jwt_payload, token_mode=TokenModeEnum.access)
+    # create refresh token
+    refresh_token = utils.encode_jwt(jwt_payload, token_mode=TokenModeEnum.refresh)
+    # save refresh token in database
 
     return Token(
-        access_token=access_token,
         token_type='Bearer',
+        access_token=access_token,
+        refresh_token=refresh_token,
     )

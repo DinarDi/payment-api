@@ -4,6 +4,7 @@ import bcrypt
 import jwt
 
 from core.config import settings
+from .schemas import TokenModeEnum
 
 
 def hash_password(
@@ -34,17 +35,21 @@ def validate_password(
 
 def encode_jwt(
         payload: dict,
+        token_mode: TokenModeEnum,
         private_key: str = settings.auth_jwt.private_key_path.read_text(),
         algorithm: str = settings.auth_jwt.algorithm,
-        expire_timedelta: timedelta = settings.auth_jwt.access_token_exp,
 ):
     """
     Function for encode JWT
     """
+    expire_timedelta: timedelta = settings.auth_jwt.access_token_exp \
+        if token_mode == TokenModeEnum.access \
+        else settings.auth_jwt.refresh_token_exp
     to_encode = payload.copy()
     expire = datetime.now(timezone.utc) + expire_timedelta
     to_encode.update(
         exp=expire,
+        mode=token_mode,
     )
 
     encoded = jwt.encode(
