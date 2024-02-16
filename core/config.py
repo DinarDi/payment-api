@@ -16,6 +16,7 @@ class AuthJWT(BaseModel):
     public_key_path: Path = BASE_DIR / 'certs' / 'jwt-public.pem'
     algorithm: str = 'RS256'
     access_token_exp: timedelta = timedelta(days=1)
+    refresh_token_exp: timedelta = timedelta(days=365)
 
 
 class Settings(BaseSettings):
