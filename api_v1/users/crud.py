@@ -1,8 +1,9 @@
 from sqlalchemy import select, Result
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from core.database.models import User, Account, Token
-from .schemas import UserCreate
+from .schemas import UserCreate, UserWithAccount
 from ..auth.utils import hash_password
 
 
@@ -42,4 +43,14 @@ async def get_user_by_username(
     stmt = select(User).where(User.username == username)
     result: Result = await session.execute(stmt)
     user: User | None = result.scalar_one_or_none()
+    return user
+
+
+async def get_user_with_account(
+        session: AsyncSession,
+        username: str,
+):
+    stmt = select(User).where(User.username == username).options(joinedload(User.account))
+    result: Result = await session.execute(stmt)
+    user: UserWithAccount = result.scalar_one_or_none()
     return user
