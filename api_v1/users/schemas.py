@@ -1,5 +1,7 @@
 from pydantic import BaseModel, EmailStr, ConfigDict
 
+from api_v1.account.schemas import AccountRead
+
 
 class UserBase(BaseModel):
     username: str
@@ -20,3 +22,8 @@ class UserCreate(UserBase):
 class UserLogin(BaseModel):
     username: str
     password: str
+
+
+class UserWithAccount(UserRead):
+    account: AccountRead
+    model_config = ConfigDict(from_attributes=True)
