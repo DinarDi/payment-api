@@ -6,7 +6,7 @@ from jwt.exceptions import InvalidTokenError
 
 from api_v1.users import crud as users_crud
 from api_v1.auth import crud as auth_crud
-from api_v1.users.schemas import UserCreate, UserRead, UserLogin
+from api_v1.users.schemas import UserCreate, UserRead, UserLogin, UserWithAccount
 from . import utils
 from .schemas import TokenRead, TokenModeEnum, CreateRefreshToken
 from core.database.models import User, Token
@@ -136,3 +136,36 @@ async def get_new_token(
 @router.post('/refresh_token')
 async def refresh_tokens(token: TokenRead = Depends(get_new_token)):
     return token
+
+
+async def get_auth_user(
+        token: str = Depends(oauth_scheme),
+        session: AsyncSession = Depends(db_settings.create_async_session),
+) -> UserWithAccount:
+    error = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail={'invalid credentials'},
+    )
+    try:
+        payload = utils.decode_jwt(token=token)
+    except InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='invalid token',
+        )
+    if 'sub' not in payload and 'mode' not in payload:
+        raise error
+    # check token mode
+    if payload['mode'] != TokenModeEnum.access:
+        raise error
+    # get user
+    user = await users_crud.get_user_with_account(username=payload['sub'], session=session)
+    if not user:
+        raise error
+
+    return user
+
+
+@router.get('/users/me', response_model=UserWithAccount)
+async def get_user(user: UserWithAccount = Depends(get_auth_user)):
+    return user
