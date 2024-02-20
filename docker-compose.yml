@@ -5,3 +5,8 @@ services:
       - '5430:5432'
     env_file:
       - ./.env
+
+  redis:
+    image: redis:7.2.4-alpine
+    ports:
+      - '6379:6379'
