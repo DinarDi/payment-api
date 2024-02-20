@@ -11,6 +11,7 @@ from . import utils
 from .schemas import TokenRead, TokenModeEnum, CreateRefreshToken
 from core.database.models import User, Token
 from core.database import db_settings
+from core.redis.redis_settings import RedisTools
 
 router = APIRouter(
     tags=['Auth'],
@@ -63,6 +64,11 @@ async def login_user(
     access_token = utils.encode_jwt(jwt_payload, token_mode=TokenModeEnum.access)
     # create refresh token
     refresh_token = utils.encode_jwt(jwt_payload, token_mode=TokenModeEnum.refresh)
+    # save access token in redis
+    await RedisTools.set_access_token(
+        username=user.username,
+        access_token=access_token
+    )
     # save refresh token in database
     refresh_token_payload: CreateRefreshToken = CreateRefreshToken(
         user_id=user.id,
@@ -125,6 +131,11 @@ async def get_new_token(
         payload=jwt_payload,
         token_mode=TokenModeEnum.access,
     )
+    # set new access token in redis
+    await RedisTools.set_access_token(
+        username=user.username,
+        access_token=new_access_token,
+    )
 
     return TokenRead(
         token_type='Bearer',
@@ -149,10 +160,11 @@ async def get_auth_user(
     try:
         payload = utils.decode_jwt(token=token)
     except InvalidTokenError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='invalid token',
-        )
+        raise error
+    # check token in redis
+    token_in_redis = await RedisTools.get_access_token(username=payload['sub'])
+    if not token_in_redis or token_in_redis != token:
+        raise error
     if 'sub' not in payload and 'mode' not in payload:
         raise error
     # check token mode
@@ -169,3 +181,20 @@ async def get_auth_user(
 @router.get('/users/me', response_model=UserWithAccount)
 async def get_user(user: UserWithAccount = Depends(get_auth_user)):
     return user
+
+
+@router.get('/logout')
+async def logout_user(
+        user: UserWithAccount = Depends(get_auth_user),
+        session: AsyncSession = Depends(db_settings.create_async_session),
+):
+    # remove refresh token for database
+    await auth_crud.delete_refresh_token(
+        session=session,
+        user_id=user.id,
+    )
+    # remove access token from redis
+    await RedisTools.remove_access_token(username=user.username)
+    return {
+        'detail': 'logout successful'
+    }
