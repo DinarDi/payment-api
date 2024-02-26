@@ -12,3 +12,8 @@ class AccountRead(AccountBase):
     balance: Decimal
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class AccountDeposit(AccountBase):
+    id: int
+    amount: Decimal
