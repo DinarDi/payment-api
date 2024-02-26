@@ -26,6 +26,8 @@ class Settings(BaseSettings):
 
     DB_URL: str
     db_echo: bool = True
+    ACCOUNT_ID: str
+    SHOP_SECRET_KEY: str
     auth_jwt: AuthJWT = AuthJWT()
 
     model_config = SettingsConfigDict(env_file='.env', extra='allow')
